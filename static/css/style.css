@@ -1,0 +1,169 @@
+body {
+    background-color: black;
+    color: white;
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    height: 100vh;
+    overflow: hidden;
+}
+
+.split-container {
+    display: flex;
+    height: 100vh;
+}
+
+.left-panel {
+    flex: 2;
+    padding: 20px;
+    overflow-y: auto;
+}
+
+.right-panel {
+    flex: 1;
+    background-color: #000;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+
+#model-viewer {
+    width: 100%;
+    height: 100%;
+    background-color: #000;
+}
+
+.error-message {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: #7fff7f;
+    font-size: 24px;
+    font-weight: bold;
+    display: none;
+}
+
+h1, h2 {
+    color: #ffffff;
+    margin-top: 0;
+}
+
+.stats-section {
+    margin-bottom: 30px;
+}
+
+.stat {
+    margin: 15px 0;
+    display: flex;
+    align-items: center;
+}
+
+.stat-label {
+    display: flex;
+    align-items: center;
+    width: 150px;
+}
+
+.level-badge {
+    background: #4CAF50;
+    border-radius: 50%;
+    width: 25px;
+    height: 25px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 10px;
+    font-weight: bold;
+}
+
+.progress-container {
+    display: flex;
+    align-items: center;
+    flex-grow: 1;
+}
+
+.progress-bar {
+    height: 20px;
+    background-color: #333;
+    border-radius: 10px;
+    overflow: hidden;
+    position: relative;
+    flex-grow: 1;
+    margin: 0 10px;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #4CAF50, #8BC34A);
+    width: 0%;
+    transition: width 0.3s;
+    display: block;
+}
+
+.progress-marker {
+    position: absolute;
+    width: 2px;
+    height: 100%;
+    background-color: rgba(255,255,255,0.5);
+}
+
+.progress-value {
+    width: 80px;
+    text-align: right;
+}
+
+.progress-actions {
+    margin-left: 10px;
+}
+
+button {
+    background-color: #444;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    margin: 0 2px;
+    border-radius: 3px;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #555;
+}
+
+.level-controls {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    display: flex;
+    align-items: center;
+}
+
+.total-level {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    font-size: 24px;
+    background: rgba(0,0,0,0.7);
+    padding: 10px 20px;
+    border-radius: 10px;
+    border: 2px solid #4CAF50;
+}
+
+.date-input {
+    background-color: #333;
+    color: white;
+    border: 1px solid #444;
+    padding: 5px;
+    margin-left: 10px;
+}
+
+.level-up {
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}

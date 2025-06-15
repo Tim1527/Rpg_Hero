@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Трекер личного прогресса</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.min.js"></script>
+</head>
+<body>
+    <div class="split-container">
+        <div class="left-panel">
+            <h1>Трекер личного прогресса</h1>
+            <div class="stats-section" id="stats-container"></div>
+        </div>
+
+        <div class="right-panel">
+            <div id="model-viewer"></div>
+            <div id="error-message" class="error-message">Loading ERROR</div>
+
+            <div class="level-controls">
+                <input type="date" class="date-input" id="global-date-input" value="{{ current_date }}">
+            </div>
+
+            <div class="total-level" id="total-level">Общий уровень: 0</div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
