@@ -264,3 +264,36 @@ button:hover {
     pointer-events: none !important;
     transition: all 0.1s ease;
 }
+.custom-tooltip {
+    padding: 8px 10px;
+    font-size: 13px;
+    line-height: 1.4;
+    max-width: 250px;
+    background: rgba(20, 20, 20, 0.95) !important;
+    border: 1px solid #2E7D32 !important;
+    transform: translateX(-10px);
+    pointer-events: none;
+    position: fixed;
+    width: 260px;
+    left: 0;
+    top: 0;
+    opacity: 0;
+    transition: opacity 0.2s, transform 0.2s;
+}
+
+.custom-tooltip div {
+    margin: 3px 0;
+    line-height: 1.4;
+}
+
+.custom-tooltip strong {
+    color: #66BB6A;
+    font-weight: normal;
+    display: inline-block;
+    min-width: 70px;
+}
+
+.custom-tooltip.visible {
+    opacity: 1;
+    transform: translateX(0);
+}

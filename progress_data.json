@@ -41,10 +41,10 @@
   },
   "\u041c\u0435\u043d\u0442\u0430\u043b\u044c\u043d\u044b\u0435": {
     "\u0412\u043e\u0441\u043f\u0440\u0438\u044f\u0442\u0438\u0435": {
-      "value": 2,
-      "current_max": 9,
+      "value": 0,
+      "current_max": 12,
       "base_max": 5,
-      "level": 2
+      "level": 3
     },
     "\u0418\u043d\u0442\u0435\u043b\u043b\u0435\u043a\u0442": {
       "value": 0,
@@ -65,5 +65,5 @@
       "level": 3
     }
   },
-  "total_level": 21
+  "total_level": 22
 }

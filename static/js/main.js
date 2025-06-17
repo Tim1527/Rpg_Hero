@@ -13,6 +13,10 @@ const audioLevelUp = document.getElementById('levelup-sound');
 
 // График
 let chart = null;
+let hoveredPoints = [];
+let currentPointIndex = 0;
+let lastMouseEvent = null;
+const customTooltip = document.createElement('div');
 
 // Анимация повышения уровня
 function animateLevelUp(deltaTime) {
@@ -85,7 +89,7 @@ function loadModel() {
 
     loader.load(
         '/model',
-        (gltf) => {
+        function(gltf) {
             model = gltf.scene;
             scene.add(model);
 
@@ -102,9 +106,9 @@ function loadModel() {
             controls.update();
         },
         undefined,
-        (error) => {
+        function(error) {
             console.error('Ошибка загрузки модели:', error);
-            errorMessage.textContent = 'Файл модели не найден. Убедитесь, что model.glb находится в папке проекта';
+            errorMessage.textContent = 'Файл модели не найден. Убедитесь, что Lowpolyszkielet.glb находится в папке проекта';
             errorMessage.style.display = 'block';
         }
     );
@@ -122,6 +126,7 @@ function closeChartModal() {
         chart.destroy();
         chart = null;
     }
+    customTooltip.classList.remove('visible');
 }
 
 function loadChartData(range) {
@@ -157,26 +162,123 @@ function loadChartData(range) {
         });
 }
 
+function initCustomTooltip() {
+    customTooltip.className = 'custom-tooltip';
+    customTooltip.style.position = 'absolute';
+    customTooltip.style.pointerEvents = 'none';
+    customTooltip.classList.remove('visible');
+    customTooltip.style.background = 'rgba(0, 0, 0, 0.9)';
+    customTooltip.style.color = 'white';
+    customTooltip.style.padding = '10px';
+    customTooltip.style.borderRadius = '5px';
+    customTooltip.style.border = '1px solid #4CAF50';
+    customTooltip.style.boxShadow = '0 0 10px rgba(0, 0, 0, 0.7)';
+    customTooltip.style.zIndex = '1000';
+    customTooltip.style.maxWidth = '280px';
+    customTooltip.style.fontSize = '13px';
+    customTooltip.style.transition = 'opacity 0.15s ease';
+    document.body.appendChild(customTooltip);
+}
 
+function updateTooltip() {
+    if (hoveredPoints.length === 0 || !chart || !lastMouseEvent) {
+        customTooltip.classList.remove('visible');
+        return;
+    }
+
+    const point = hoveredPoints[currentPointIndex];
+    const dataset = chart.data.datasets[point.datasetIndex];
+    const raw = dataset.data[point.index];
+
+    customTooltip.innerHTML = `
+        <div style="font-weight: bold; color: #4CAF50; margin-bottom: 3px;">${raw.date}</div>
+        <div><strong>Категория:</strong> ${raw.category}</div>
+        <div><strong>Навык:</strong> ${raw.stat}</div>
+        <div><strong>Уровень:</strong> ${raw.level}</div>
+        <div><strong>Прогресс:</strong> ${raw.rawValue}</div>
+        <div><strong>Изменение:</strong> ${raw.change}</div>
+        ${hoveredPoints.length > 1 ? `
+        <div style="margin-top: 5px; padding-top: 5px; border-top: 1px solid #444; color: #aaa; font-size: 0.85em;">
+            Точка ${currentPointIndex + 1} из ${hoveredPoints.length}
+        </div>
+        ` : ''}
+    `;
+
+    const rect = chart.canvas.getBoundingClientRect();
+    const x = lastMouseEvent.clientX - rect.left;
+    const y = lastMouseEvent.clientY - rect.top;
+
+    // Рассчитываем позицию слева от курсора с учетом ширины тултипа
+    const tooltipWidth = 280;
+    const posX = x - (tooltipWidth / 3) - 20; // ← Основное изменение
+
+    // Проверяем, чтобы не выходило за границы canvas
+    const finalX = posX < 10 ? 10 : posX;
+
+    customTooltip.style.left = `${finalX}px`;
+    customTooltip.style.top = `${y}px`;
+    customTooltip.classList.add('visible');
+
+    const tooltipHeight = customTooltip.offsetHeight;
+    const canvasTop = chart.canvas.getBoundingClientRect().top;
+    const windowHeight = window.innerHeight;
+
+    if (y + tooltipHeight > windowHeight - canvasTop) {
+    customTooltip.style.top = `${y - tooltipHeight}px`;
+    }
+}
+
+function handleChartHover(event) {
+    if (!chart) return;
+
+    // Уменьшаем радиус обнаружения точек
+    const points = chart.getElementsAtEventForMode(
+        event,
+        'point', // Режим строгого попадания
+        {
+            intersect: true, // Только при прямом пересечении
+            radius: 10 // Всего 10 пикселей вокруг точки
+        },
+        true
+    );
+
+    hoveredPoints = points;
+    currentPointIndex = 0;
+    lastMouseEvent = event;
+
+    if (hoveredPoints.length > 0) {
+        updateTooltip();
+    } else {
+        customTooltip.classList.remove('visible');
+    }
+}
+
+function handleChartScroll(event) {
+    if (hoveredPoints.length > 1) {
+        event.preventDefault();
+        const delta = Math.sign(event.deltaY);
+        currentPointIndex = (currentPointIndex + delta + hoveredPoints.length) % hoveredPoints.length;
+        updateTooltip();
+    }
+}
 
 function renderChart(logs, range) {
     const canvas = document.getElementById('chart-container');
     if (!canvas) return;
 
-    // Очищаем предыдущий график
     if (chart) {
         chart.destroy();
         chart = null;
     }
 
-    // Фиксируем размеры canvas
     canvas.width = canvas.parentElement.clientWidth;
     canvas.height = 500;
 
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    // Подготовка данных
+    initCustomTooltip();
+
     const datasets = {};
     const colors = [
         '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0',
@@ -204,12 +306,10 @@ function renderChart(logs, range) {
                 borderColor: colors[Object.keys(datasets).length % colors.length],
                 backgroundColor: 'rgba(0,0,0,0.1)',
                 borderWidth: 2,
-                tension: 0,
-                pointBackgroundColor: '#ffffff',
-                pointBorderColor: colors[Object.keys(datasets).length % colors.length],
-                pointRadius: 3, // Стандартный размер точек
-                pointHoverRadius: 6, // Размер при наведении
-                pointHitRadius: 6 // Зона взаимодействия
+                tension: 0.1,
+                pointRadius: 3,
+                pointHoverRadius: 6,
+                pointHitRadius: 10
             };
         }
 
@@ -225,12 +325,10 @@ function renderChart(logs, range) {
         });
     });
 
-    // Сортируем данные по дате
     Object.values(datasets).forEach(dataset => {
         dataset.data.sort((a, b) => a.x - b.x);
     });
 
-    // Настройки графика
     chart = new Chart(ctx, {
         type: 'line',
         data: {
@@ -275,96 +373,32 @@ function renderChart(logs, range) {
                     }
                 },
                 tooltip: {
-                    enabled: true,
-                    intersect: false,
-                    mode: 'point', // Режим одной точки
-                    position: 'nearest',
-                    backgroundColor: 'rgba(0,0,0,0.9)',
-                    borderColor: '#4CAF50',
-                    borderWidth: 1,
-                    caretSize: 8,
-                    displayColors: false,
-                    padding: 12,
-                    callbacks: {
-                        title: (context) => {
-                            return context[0].raw.date;
-                        },
-                        label: (context) => {
-                            const raw = context.raw;
-                            return [
-                                `Категория: ${raw.category}`,
-                                `Навык: ${raw.stat}`,
-                                `Уровень: ${raw.level}`,
-                                `Прогресс: ${raw.rawValue}/${raw.y % 10 + raw.rawValue}`,
-                                `Изменение: ${raw.change}`
-                            ];
-                        }
-                    }
+                    enabled: false
                 }
             },
             interaction: {
                 intersect: false,
-                mode: 'point', // Точное взаимодействие с точками
+                mode: 'nearest',
                 axis: 'xy'
             },
             elements: {
                 point: {
-                    radius: 3,
-                    hoverRadius: 6,
-                    hitRadius: 10,
+                    radius: 3, // Видимый размер точки
+                    hoverRadius: 5, // Размер при наведении
+                    hitRadius: 10, // Зона взаимодействия (10px)
                     borderWidth: 2
-                },
-                line: {
-                    tension: 0.1,
-                    borderWidth: 2,
-                    fill: false
                 }
             }
+
+
         }
     });
 
-    // Кастомная обработка наведения
-    let lastHoveredIndex = -1;
-    let lastHoveredDataset = -1;
-
-    canvas.addEventListener('mousemove', (e) => {
-        if (!chart) return;
-
-        const activePoints = chart.getElementsAtEventForMode(
-            e,
-            'point', // Режим точного попадания
-            { intersect: false },
-            false
-        );
-
-        // Сбрасываем предыдущее выделение
-        if (lastHoveredIndex !== -1 && lastHoveredDataset !== -1) {
-            chart.data.datasets[lastHoveredDataset].pointRadius = 3;
-        }
-
-        // Применяем новое выделение
-        if (activePoints.length > 0) {
-            const point = activePoints[0];
-            chart.data.datasets[point.datasetIndex].pointRadius = 6;
-            lastHoveredIndex = point.index;
-            lastHoveredDataset = point.datasetIndex;
-        } else {
-            lastHoveredIndex = -1;
-            lastHoveredDataset = -1;
-        }
-
-        chart.update('none'); // Обновляем без анимации
-    });
-
+    canvas.addEventListener('mousemove', handleChartHover);
+    canvas.addEventListener('wheel', handleChartScroll);
     canvas.addEventListener('mouseout', () => {
-        if (!chart) return;
-
-        // Сбрасываем все выделения
-        chart.data.datasets.forEach(dataset => {
-            dataset.pointRadius = 3;
-        });
-
-        chart.update('none');
+        hoveredPoints = [];
+        customTooltip.classList.remove('visible');
     });
 }
 
@@ -515,7 +549,6 @@ window.onload = function() {
         audio.volume = 0.7;
     });
 
-    // Ресайз графика при изменении окна
     window.addEventListener('resize', () => {
         if (chart) {
             const canvas = document.getElementById('chart-container');
